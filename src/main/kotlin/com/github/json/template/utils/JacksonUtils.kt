@@ -6,10 +6,14 @@ import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer
 import com.fasterxml.jackson.databind.deser.std.StringDeserializer
 import com.fasterxml.jackson.databind.module.SimpleModule
+import com.github.json.template.expression.ExpressionFactory
 
 object CustomDeserializer : StdDeserializer<Any>(String::class.java) {
-    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Any {
-        return ""
+    override fun deserialize(p: JsonParser, ctxt: DeserializationContext): Any? {
+        if (p.currentName?.isNotBlank() == true) {
+            return ExpressionFactory.getHandleResult(p.text)
+        }
+        return p.text
     }
 }
 
@@ -17,29 +21,26 @@ object CustomBeanModify : BeanDeserializerModifier() {
     override fun modifyDeserializer(
         config: DeserializationConfig?, beanDesc: BeanDescription, deserializer: JsonDeserializer<*>
     ): JsonDeserializer<*> {
-        if (deserializer !is StringDeserializer) {
-            return deserializer
-        }
-
         if (!beanDesc.beanClass.isAssignableFrom(String::class.java)) {
             return deserializer
         }
 
-        return CustomDeserializer
+        return deserializer as? StringDeserializer ?: CustomDeserializer
     }
 }
 
 object JsonFacade {
-    private val objectMapper = ObjectMapper()
 
-    init {
-        val simpleModule = SimpleModule()
-        simpleModule.setDeserializerModifier(CustomBeanModify)
-        objectMapper.registerModule(simpleModule)
+    private val objectMapper: ObjectMapper = ObjectMapper().apply {
+        registerModules(
+            SimpleModule().apply {
+                setDeserializerModifier(CustomBeanModify)
+            }
+        )
     }
 
-    fun read(string: String) {
+    fun read(string: String): String {
         val readValue = objectMapper.readValue(string, Map::class.java)
-        println(readValue)
+        return objectMapper.writeValueAsString(readValue)
     }
 }

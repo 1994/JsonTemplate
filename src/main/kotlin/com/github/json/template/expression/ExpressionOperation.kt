@@ -1,24 +1,41 @@
 package com.github.json.template.expression
 
-import com.github.json.template.JsonTemplateContext
+import com.github.json.template.JsonTemplateHolder
 
 const val PREFIX = "$" + "{"
 const val SUFFIX = "}"
 
 interface ExpressIdentity {
-    fun needHandle(content: String): Boolean
+    fun needHandle(expression: String): Boolean
+
+    fun getContent(expression: String): String
 }
 
-data class ExpressionContext(val rootTarget: Any, val identity: ExpressIdentity = SimpleExpressIdentity())
+data class ExpressionConfig(val identity: ExpressIdentity = SimpleExpressIdentity())
 data class SimpleExpressIdentity(val prefix: String = PREFIX, val suffix: String = SUFFIX) : ExpressIdentity {
-    override fun needHandle(content: String): Boolean {
-        return content.startsWith(prefix, ignoreCase = true) && content.endsWith(suffix, ignoreCase = true)
+    override fun needHandle(expression: String): Boolean {
+        return expression.startsWith(prefix, ignoreCase = true) && expression.endsWith(suffix, ignoreCase = true)
     }
 
+    override fun getContent(expression: String): String {
+        return expression.removeSurrounding(prefix, suffix);
+    }
 }
 
 data class ExpressionOption(val compile: Boolean)
 
-fun handle(content: String, jsonTemplateContext: JsonTemplateContext, expressIdentity: ExpressIdentity): Any {
-    return ""
+object ExpressionFactory {
+    fun getHandleResult(expression: String): Any? {
+        val identity = JsonTemplateHolder.get().expressionConfig.identity
+        if (!identity.needHandle(expression)) {
+            return expression
+        }
+
+        val content = identity.getContent(expression)
+        val target = JsonTemplateHolder.get().target
+        if (target is Map<*, *>) {
+            return target.getOrDefault(content, null)
+        }
+        return content
+    }
 }

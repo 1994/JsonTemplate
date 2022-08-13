@@ -1,6 +1,8 @@
 package com.github.json.template
 
-data class JsonTemplateContext(val target: Any)
+import com.github.json.template.expression.ExpressionConfig
+
+data class JsonTemplateContext(val target: Any, val expressionConfig: ExpressionConfig = ExpressionConfig())
 
 object JsonTemplateHolder {
     private val threadLocal: ThreadLocal<JsonTemplateContext> = InheritableThreadLocal()
