@@ -1,6 +1,7 @@
 package com.github.json.template.expression
 
 import com.github.json.template.JsonTemplateHolder
+import com.googlecode.aviator.AviatorEvaluator
 
 const val PREFIX = "$" + "{"
 const val SUFFIX = "}"
@@ -35,6 +36,9 @@ object ExpressionFactory {
         val target = JsonTemplateHolder.get().target
         if (target is Map<*, *>) {
             return target.getOrDefault(content, null)
+        }
+        AviatorEvaluator.compile(content, true).apply {
+            execute()
         }
         return content
     }

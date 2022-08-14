@@ -14,6 +14,6 @@ object Utils {
         val input = getResourceAsText("templates/${file}")
         val expect = getResourceAsText("asserts/${file}")
         assertNotNull(input)
-        JSONAssert.assertEquals(expect, JsonTemplate.parse(input, target), true)
+        JSONAssert.assertEquals(expect, JsonTemplate.parseToString(input, target), true)
     }
 }

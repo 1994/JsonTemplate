@@ -32,15 +32,16 @@ object CustomBeanModify : BeanDeserializerModifier() {
 object JsonFacade {
 
     private val objectMapper: ObjectMapper = ObjectMapper().apply {
-        registerModules(
-            SimpleModule().apply {
-                setDeserializerModifier(CustomBeanModify)
-            }
-        )
+        registerModules(SimpleModule().apply {
+            setDeserializerModifier(CustomBeanModify)
+        })
     }
 
-    fun read(string: String): String {
-        val readValue = objectMapper.readValue(string, Map::class.java)
-        return objectMapper.writeValueAsString(readValue)
+    fun <T> read(string: String, clazz: Class<T>): T {
+        return objectMapper.readValue(string, clazz)
+    }
+
+    fun write(any: Any): String {
+        return objectMapper.writeValueAsString(any)
     }
 }
